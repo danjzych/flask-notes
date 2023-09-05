@@ -42,6 +42,7 @@ class User(db.Model):
 
     @classmethod
     def register(cls, username, password, email, first_name, last_name):
+        """Register a new user in notes app."""
 
         hashed = bcrypt.generate_password_hash(password).decode('utf8')
 
@@ -50,3 +51,14 @@ class User(db.Model):
                    email=email,
                    first_name=first_name,
                    last_name=last_name)
+
+    @classmethod
+    def authenticate(cls, username, password):
+        """Authenticate a user in notes app."""
+
+        u = cls.query.get_or_404(username)
+
+        if u and bcrypt.check_password_hash(u.password, password):
+            return u
+        else:
+            return False

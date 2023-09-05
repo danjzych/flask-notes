@@ -6,7 +6,7 @@
   <title>{% block title %} {% endblock %}</title>
 </head>
 <body>
-  {% for messages in get_flashed_messages() %}
+  {% for message in get_flashed_messages() %}
     <p class="flash-message">
       {{ message }}
     </p>

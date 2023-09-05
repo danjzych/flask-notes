@@ -1,10 +1,10 @@
 import os
 
-from flask import Flask, request, redirect, render_template, session
+from flask import Flask, request, redirect, render_template, session, flash
 from flask_debugtoolbar import DebugToolbarExtension
 
 from models import db, connect_db, User
-from forms import RegisterForm, LoginForm
+from forms import RegisterForm, LoginForm, CSRFProtectForm
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
@@ -18,12 +18,14 @@ connect_db(app)
 
 @app.get('/')
 def homepage_redirect():
+    """Redirect to register page."""
 
     return redirect('/register')
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def handle_register():
+    """Handle the registration form for new user creation."""
 
     form = RegisterForm()
 
@@ -40,7 +42,7 @@ def handle_register():
         db.session.commit()
 
         session["username"] = new_user.username
-
+        flash('User registered succesfully!')
         return redirect(f"/users/{username}")
 
     else:
@@ -64,8 +66,32 @@ def handle_login():
             return redirect(f"/users/{username}")
 
         else:
+            flash('Your username our password is incorrect!')
             form.username.errors = ["Bad name/password"]
 
     return render_template("user_form.html", form=form, title="login")
 
 
+@app.get('/users/<username>')
+def show_user_info(username):
+    """Show user profile for logged in users."""
+
+
+    if "username" not in session:
+        return redirect('/')
+    else:
+        user = User.query.get_or_404(username)
+
+        return render_template('user_profile.html', user=user)
+
+@app.post('/logout')
+def logout_user():
+    """Route for logging out users."""
+
+    form = CSRFProtectForm()
+
+    if form.validate_on_submit():
+
+        session.pop('username', None)
+
+    return redirect('/')

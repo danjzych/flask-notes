@@ -27,4 +27,15 @@
 
   <button type="submit">{{ title }}</button>
 
+  </form>
+
+  {% if title == 'register' %}
+  <br>
+  <p>Or, for existing users...</p>
+  <form action="/login">
+    <button>
+      Login For Existing Users
+    </button>
+  </form>
+  {% endif %}
 {% endblock %}
