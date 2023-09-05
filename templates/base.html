@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %} {% endblock $}</title>
+  <title>{% block title %} {% endblock %}</title>
 </head>
 <body>
-  {% for messages in get_flash_messages() %}
+  {% for messages in get_flashed_messages() %}
     <p class="flash-message">
-      {% message %}
+      {{ message }}
     </p>
   {% endfor %}
   {% block content %} CONTENT HERE {% endblock %}

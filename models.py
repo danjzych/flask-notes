@@ -40,7 +40,7 @@ class User(db.Model):
         nullable=False
     )
 
-    classmethod
+    @classmethod
     def register(cls, username, password, email, first_name, last_name):
 
         hashed = bcrypt.generate_password_hash(password).decode('utf8')
