@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, EmailField, PasswordField
+from wtforms import StringField, EmailField, PasswordField, TextAreaField
 from wtforms.validators import InputRequired, Length, Email
 
 
@@ -27,3 +27,11 @@ class LoginForm(FlaskForm):
 
 class CSRFProtectForm(FlaskForm):
     """Form to handle CSRF protection for logouts."""
+
+
+class AddNoteForm(FlaskForm):
+    """Form for adding a note in the note app."""
+
+    title = StringField('Title', validators=[InputRequired(),
+                                                   Length(min=1, max=100)])
+    content = TextAreaField('Note', validators=[InputRequired()])

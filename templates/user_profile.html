@@ -16,11 +16,44 @@
   <em>{{ user.email }}</em>
 </p>
 
+<h2>User Notes: </h2>
+
+<ul>
+  {% for note in user.notes %}
+    <li>
+      <form action="">
+        <p><a href="">{{ note.title }}</a></p>
+        <button formaction="/notes/{{ note.id }}/update" formmethod="POST">
+          <i class="bi bi-pencil-square"></i>
+        </button>
+        <button formaction="/notes/{{ note.id }}/delete" formmethod="POST">
+          <i class="bi bi-trash"></i>
+        </button>
+      </form>
+    </li>
+  {% endfor %}
+</ul>
+
+<form action="/users/{{ user.username }}/notes/add">
+  <button>
+    Add Note
+  </button>
+</form>
+
 <form action="/logout" method="POST">
   {{form.hidden_tag()}}
   <button>
     Logout
   </button>
 </form>
+
+
+<form action="/users/{{ username }}/delete" method="POST">
+  {{form.hidden_tag()}}
+  <button>
+    Delete User
+  </button>
+</form>
+
 
 {% endblock %}

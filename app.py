@@ -2,9 +2,10 @@ import os
 
 from flask import Flask, request, redirect, render_template, session, flash
 from flask_debugtoolbar import DebugToolbarExtension
+from werkzeug.exceptions import Unauthorized
 
 from models import db, connect_db, User, Note
-from forms import RegisterForm, LoginForm, CSRFProtectForm
+from forms import RegisterForm, LoginForm, CSRFProtectForm, AddNoteForm
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
@@ -22,6 +23,10 @@ def homepage_redirect():
 
     return redirect('/register')
 
+
+##################
+## USER ROUTES ##
+##################
 
 @app.route('/register', methods=['GET', 'POST'])
 def handle_register():
@@ -75,18 +80,15 @@ def handle_login():
 @app.get('/users/<username>')
 def show_user_info(username):
     """Show user profile for logged in users."""
-    # fail fast, check if user NOT in session first, then rest not in conditional
 
-    form = CSRFProtectForm()
-
-    if username == session.get('username', None):
-        user = User.query.get_or_404(username)
-        return render_template('user_profile.html', user=user, form=form)
-
-    else:
+    if username != session.get('username', None):
         flash('You are not authorized for this page!')
         return redirect('/')
 
+    form = CSRFProtectForm()
+    user = User.query.get_or_404(username)
+
+    return render_template('user_profile.html', user=user, form=form)
 
 
 @app.post('/logout')
@@ -100,21 +102,45 @@ def logout_user():
         session.pop('username', None)
 
     # could be more aggressive if form fails validation, error
-    return redirect('/')
+    raise Unauthorized()
+    # flash('Hey, no CSRF attacks!!!! >:( ')
+    # return redirect('/')
 
 
-@app.route('/notes/<int:id>/update', methods=['GET','POST'])
-def handle_note_update(id):
-    """Render note update form and handle update"""
-    form = updateNote()
-    note = Note.query.get_or_404(id)
+##################
+## NOTES ROUTES ##
+##################
+
+@app.route('/users/<username>/notes/add', methods=['GET', 'POST'])
+def handle_add_note(username):
+    """Route for getting add note form, and adding not to db."""
+
+    form = AddNoteForm()
 
     if form.validate_on_submit():
-        note.title= form.title.data
-        note.content = form.content.data
+        title = form.title.data
+        content = form.content.data
+
+        new_note = Note(title=title, content=content, owner_username=username)
+
+        db.session.add(new_note)
         db.session.commit()
-        redirect(f"/users/{note.owner_username}")
 
-    return render_template("update_note.html", form=form)
+        return redirect(f"/users/{username}")
+    else:
+        return render_template('add_note_form.html', form=form)
 
 
+# @app.route('/notes/<int:id>/update', methods=['GET','POST'])
+# def handle_note_update(id):
+#     """Render note update form and handle update"""
+#     form = updateNote()
+#     note = Note.query.get_or_404(id)
+
+#     if form.validate_on_submit():
+#         note.title= form.title.data
+#         note.content = form.content.data
+#         db.session.commit()
+#         redirect(f"/users/{note.owner_username}")
+
+#     return render_template("update_note.html", form=form)

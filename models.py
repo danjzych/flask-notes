@@ -55,8 +55,8 @@ class User(db.Model):
     @classmethod
     def authenticate(cls, username, password):
         """Authenticate a user in notes app."""
-        # filter_by one_or_none()
-        u = cls.query.get_or_404(username)
+
+        u = cls.query.filter_by(username=username).one_or_none()
 
         if u and bcrypt.check_password_hash(u.password, password):
             return u
