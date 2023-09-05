@@ -55,10 +55,39 @@ class User(db.Model):
     @classmethod
     def authenticate(cls, username, password):
         """Authenticate a user in notes app."""
-
+        # filter_by one_or_none()
         u = cls.query.get_or_404(username)
 
         if u and bcrypt.check_password_hash(u.password, password):
             return u
         else:
             return False
+
+
+class Note(db.Model):
+    """Note model"""
+
+    __tablename__ = 'notes'
+
+    id = db.Column(
+        db.Integer,
+        autoincrement=True,
+        primary_key=True
+    )
+
+    title = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    content = db.Column(
+        db.Text,
+        nullable=False
+    )
+
+    owner_username = db.Column(
+        db.ForeignKey("users.username"),
+        nullable=False
+    )
+
+    user = db.relationship("User", backref="notes")
