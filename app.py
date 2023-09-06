@@ -5,7 +5,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from werkzeug.exceptions import Unauthorized
 
 from models import db, connect_db, User, Note
-from forms import RegisterForm, LoginForm, CSRFProtectForm, AddNoteForm
+from forms import RegisterForm, LoginForm, CSRFProtectForm, NoteForm
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
@@ -106,6 +106,31 @@ def logout_user():
     # flash('Hey, no CSRF attacks!!!! >:( ')
     # return redirect('/')
 
+@app.post('/users/<username>/delete')
+def delete_user(username):
+    """Route for deleting users"""
+
+    if username != session.get('username', None):
+        flash('You are not authorized for this page!')
+        return redirect('/')
+
+    form = CSRFProtectForm()
+
+
+    if form.validate_on_submit():
+        user = User.query.get_or_404(username)
+        for note in user.notes:
+            db.session.delete(note)
+
+        db.session.commit()
+
+        db.session.delete(user)
+        db.session.commit()
+        session.pop('username', None)
+        return redirect('/')
+
+    raise Unauthorized()
+
 
 ##################
 ## NOTES ROUTES ##
@@ -115,7 +140,11 @@ def logout_user():
 def handle_add_note(username):
     """Route for getting add note form, and adding not to db."""
 
-    form = AddNoteForm()
+    if username != session.get('username', None):
+        flash('You are not authorized for this page!')
+        return redirect('/')
+
+    form = NoteForm()
 
     if form.validate_on_submit():
         title = form.title.data
@@ -131,16 +160,37 @@ def handle_add_note(username):
         return render_template('add_note_form.html', form=form)
 
 
-# @app.route('/notes/<int:id>/update', methods=['GET','POST'])
-# def handle_note_update(id):
-#     """Render note update form and handle update"""
-#     form = updateNote()
-#     note = Note.query.get_or_404(id)
+@app.route('/notes/<int:id>/update', methods=['GET','POST'])
+def handle_note_update(id):
+    """Render note update form and handle update"""
 
-#     if form.validate_on_submit():
-#         note.title= form.title.data
-#         note.content = form.content.data
-#         db.session.commit()
-#         redirect(f"/users/{note.owner_username}")
+    note = Note.query.get_or_404(id)
+    if note.owner_username != session.get('username', None):
+        flash('You are not authorized for this page!')
+        return redirect('/')
 
-#     return render_template("update_note.html", form=form)
+    form = NoteForm(obj=note)
+
+    if form.validate_on_submit():
+        note.title= form.title.data
+        note.content = form.content.data
+        db.session.commit()
+        return redirect(f"/users/{note.owner_username}")
+
+    return render_template("update_note.html", form=form)
+
+@app.post('/notes/<int:id>/delete')
+def delete_note(id):
+    """Route for deleting notes."""
+    note = Note.query.get_or_404(id)
+    if note.owner_username != session.get('username', None):
+        flash('You are not authorized for this page!')
+        return redirect('/')
+
+    db.session.delete(note)
+    db.session.commit()
+    flash('Note succesfully deleted!')
+
+    return redirect(f"/users/{note.owner_username}")
+
+

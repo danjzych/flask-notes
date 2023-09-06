@@ -29,9 +29,18 @@ class CSRFProtectForm(FlaskForm):
     """Form to handle CSRF protection for logouts."""
 
 
-class AddNoteForm(FlaskForm):
+class NoteForm(FlaskForm):
     """Form for adding a note in the note app."""
 
     title = StringField('Title', validators=[InputRequired(),
                                                    Length(min=1, max=100)])
     content = TextAreaField('Note', validators=[InputRequired()])
+
+
+# class UpdateNoteForm(FlaskForm):
+#     """Form for adding a note in the note app."""
+
+#     title = StringField('Title', validators=[InputRequired(),
+#                                                    Length(min=1, max=100)])
+#     content = TextAreaField('Note', validators=[InputRequired()])
+
